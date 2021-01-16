@@ -12,7 +12,16 @@ docker build -t ssm-ml .
 docker run ssm-ml
 ```
 
-Then, enter the development credentials:
+Then, navigate to:
+
+```
+https://<hostname>:8914
+```
+
+for local development, `<hostname>` will be `localhost`.
+
+
+When prompted, enter the development credentials:
  - User: `ssmuser`
  - Password: `ssm2020!`
 
