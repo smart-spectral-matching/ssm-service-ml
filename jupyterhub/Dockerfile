@@ -8,8 +8,8 @@ ADD ./jupyter.key /home/jovyan/.jupyter/jupyter.key
 RUN pip install matplotlib notebook numpy sklearn
 
 
-ENV USERNAME=ssmuser
-ENV PASSWORD=ssm2020!
+ENV USERNAME=${JUPYTER_USERNAME}
+ENV PASSWORD=${JUPYTER_PASSWORD}
 
 RUN useradd -m -p $(openssl passwd -1 ${PASSWORD}) -s /bin/bash -G sudo ${USERNAME}
 USER ssmuser
