@@ -1,26 +1,15 @@
 #!/bin/sh
 
-OS_USER="${JPYTR_USER:-ss7user}"
-OS_PASS="${JPYTR_PASS:-Larm33pa7}"
+which jupyterhub || exit 1
 
-useradd \
-    --no-create-home \
-    --groups sudo \
-  ${OS_USER}
+useradd -M ${JPYTR_USER}
+echo "${JPYTR_USER}:${JPYTR_PASS}" | chpasswd
 
-echo '${OS_USER}:${OS_PASS}' | chpasswd
-
-chown -R ${OS_USER}:${OS_USER} /srv/jupyterhub
-
-chmod +r /etc/shadow
-
-su - ${OS_USER} <<_EOT
-
+chown -R ${JPYTR_USER}:${JPYTR_PASS} /srv/jupyterhub
 jupyterhub --debug \
-  --ip 0.0.0.0 \
-  --port ${JPYTR_LISTEN_PORT:-8080} \
+  --config    /etc/jupyterhub/jupyterhub_config.py \
+  --ssl-cert  /etc/jupyterhub/server.cert \
   --ssl-key   /etc/jupyterhub/server.key \
-  --ssl-cert  /etc/jupyterhub/server.cert
-
-_EOT
+  --port ${JPYTR_LISTEN_PORT} \
+  --ip 0.0.0.0
 
