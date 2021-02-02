@@ -3,7 +3,7 @@ FROM jupyterhub/jupyterhub
 
 ENV JPYTR_LISTEN_PORT='8000'
 ENV JPYTR_USER='ssmuser'
-ENV JPYTR_PASS='Larm33pa8'
+ENV JPYTR_PASS='passw0rd'
 
 RUN set -x \
   && pip install matplotlib notebook numpy sklearn \
