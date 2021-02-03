@@ -1,21 +1,27 @@
+
 FROM jupyterhub/jupyterhub
 
-#RUN jupyterhub generate-config
-ADD ./jupyterhub_config.py /home/jovyan/.jupyter/jupyterhub_config.py
-ADD ./jupyter.cert /home/jovyan/.jupyter/jupyter.cert
-ADD ./jupyter.key /home/jovyan/.jupyter/jupyter.key
+ENV JPYTR_LISTEN_PORT='8000'
+ENV JPYTR_USER='ssmuser'
+ENV JPYTR_PASS='passw0rd'
 
-RUN pip install matplotlib notebook numpy sklearn
+RUN set -x \
+  && pip install matplotlib notebook numpy sklearn \
+  && mkdir -p /etc/jupyterhub \
+  && cd       /etc/jupyterhub \
+  && openssl req \
+    -x509 -nodes -days 365 -newkey rsa:2048 \
+    -subj "/C=US/ST=Tennessee/L=Oak Ridge/O=Oak Ridge National Laboratory/OU=Research Software Engineering Group/CN=ssm-ml" \
+    -keyout  ./server.key \
+    -out     ./server.cert \
+  && chmod 644 ./server.key \
+  && jupyterhub --generate-config -f ./jupyterhub_config.py \
+  && cd -
 
+COPY ./ssmdemo.ipynb         /srv/jupyterhub/notebooks/
+COPY ./jupyterhub_config.py  /etc/jupyterhub/
+COPY ./docker-entrypoint.sh  /
 
-ENV USERNAME=ssmuser
-ENV PASSWORD=ssm2020!
+WORKDIR /srv/jupyterhub
+ENTRYPOINT ["/docker-entrypoint.sh"]
 
-RUN useradd -m -p $(openssl passwd -1 ${PASSWORD}) -s /bin/bash -G sudo ${USERNAME}
-USER ssmuser
-WORKDIR /home/ssmuser
-
-RUN mkdir /home/ssmuser/notebooks
-ADD ./ssmdemo.ipynb /home/ssmuser/notebooks/ssmdemo.ipynb
-
-CMD [ "jupyterhub", "-f", "/home/jovyan/.jupyter/jupyterhub_config.py", "--debug" ]
