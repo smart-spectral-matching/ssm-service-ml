@@ -7,7 +7,8 @@ This is the machine learning component for the Smart Spectral Matching (SSM) pro
 To launch the JupyterHub service
 
 ```
-docker-compose up -d
+docker login code.ornl.gov:4567
+docker-compose up
 ```
 
 
