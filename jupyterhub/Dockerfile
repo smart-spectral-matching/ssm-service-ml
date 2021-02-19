@@ -1,5 +1,5 @@
 
-FROM jupyterhub/jupyterhub
+FROM code.ornl.gov:4567/rse/datastreams/ssm/backend/ssm-ml/jupyterhub/jupyterhub:1.3
 
 ENV JPYTR_LISTEN_PORT='8000'
 ENV JPYTR_USER='ssmuser'
