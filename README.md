@@ -15,7 +15,7 @@ docker-compose up
 Then, navigate to:
 
 ```
-https://<hostname>:8914
+https://<hostname>:8914/machine-learning/training/
 ```
 
 for local development, `<hostname>` will be `localhost`.
