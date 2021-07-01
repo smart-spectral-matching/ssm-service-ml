@@ -11,6 +11,8 @@ build-ssm-backend-ssm-ml:
   stage: build
   script:
     - func_rse_docker_cleanup
+    - echo $CI_DEPLOY_USER
+    - echo $CI_DEPLOY_PASSWORD
     - cd Database
     - docker login --username=$CI_REGISTRY_USER --password=$CI_REGISTRY_PASSWORD $CI_REGISTRY
     - docker build -t $CI_REGISTRY_IMAGE/$CI_COMMIT_REF_NAME-db:$CI_COMMIT_SHORT_SHA .
