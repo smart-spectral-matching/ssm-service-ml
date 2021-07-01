@@ -11,12 +11,33 @@ build-ssm-backend-ssm-ml:
   stage: build
   script:
     - func_rse_docker_cleanup
-    - cd ./jupyterhub
+    - cd Database
     - docker login --username=$CI_REGISTRY_USER --password=$CI_REGISTRY_PASSWORD $CI_REGISTRY
-    - docker build -t $CI_REGISTRY_IMAGE/$CI_COMMIT_REF_NAME:$CI_COMMIT_SHORT_SHA .
+    - docker build -e POSTGRES_DB=ssm -t $CI_REGISTRY_IMAGE-db/$CI_COMMIT_REF_NAME:$CI_COMMIT_SHORT_SHA .
+    - docker tag $CI_REGISTRY_IMAGE-db/$CI_COMMIT_REF_NAME:$CI_COMMIT_SHORT_SHA $CI_REGISTRY_IMAGE-db/$CI_COMMIT_REF_NAME:latest
+    - docker push $CI_REGISTRY_IMAGE-db/$CI_COMMIT_REF_NAME:$CI_COMMIT_SHORT_SHA
+    - docker push $CI_REGISTRY_IMAGE-db/$CI_COMMIT_REF_NAME:latest
+    - cd ..
+    - docker run -p 5432:5432 --ip 172.17.0.2 --name ssmdb $CI_REGISTRY_IMAGE/$CI_COMMIT_REF_NAME:$CI_COMMIT_SHORT_SHA
+    - docker build --build-arg CI_PROJECT_ID=$CI_PROJECT_ID --build-arg TWINE_PASSWORD=$CI_REGISTRY_PASSWORD --build-arg TWINE_USERNAME=$CI_REGISTRY_PASSWORD -t ssm-package-build .
+    - docker stop ssmdb
+    - cd ./jupyterhub
+    - docker build -t $CI_REGISTRY_IMAGE/$CI_COMMIT_REF_NAME:$CI_COMMIT_SHORT_SHA --build-arg ML_PROJECT_ID=$CI_PROJECT_ID --build-arg GITLAB_PASSWORD=$CI_REGISTRY_PASSWORD --build-arg GITLAB_USERNAME=$CI_REGISTRY_USER .
     - docker tag $CI_REGISTRY_IMAGE/$CI_COMMIT_REF_NAME:$CI_COMMIT_SHORT_SHA $CI_REGISTRY_IMAGE/$CI_COMMIT_REF_NAME:latest
     - docker push $CI_REGISTRY_IMAGE/$CI_COMMIT_REF_NAME:$CI_COMMIT_SHORT_SHA
     - docker push $CI_REGISTRY_IMAGE/$CI_COMMIT_REF_NAME:latest
   tags:
     - rse-multi-builder
 
+build-ssm-backend-ssm-ml-db:
+  stage: build
+  script:
+    - func_rse_docker_cleanup
+    - cd ./Database
+    - docker login --username=$CI_REGISTRY_USER --password=$CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker build -t $CI_REGISTRY_IMAGE-db/$CI_COMMIT_REF_NAME:$CI_COMMIT_SHORT_SHA .
+    - docker tag $CI_REGISTRY_IMAGE-db/$CI_COMMIT_REF_NAME:$CI_COMMIT_SHORT_SHA $CI_REGISTRY_IMAGE/$CI_COMMIT_REF_NAME:latest
+    - docker push $CI_REGISTRY_IMAGE-db/$CI_COMMIT_REF_NAME:$CI_COMMIT_SHORT_SHA
+    - docker push $CI_REGISTRY_IMAGE-db/$CI_COMMIT_REF_NAME:latest
+  tags:
+    - rse-multi-builder
