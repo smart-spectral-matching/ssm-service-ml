@@ -1,4 +1,4 @@
-FROM python:3.6.13-slim-buster
+FROM code.ornl.gov:4567/rse/datastreams/ssm/backend/ssm-ml/python:3.6.13-slim-buster
 
 ARG CI_PROJECT_ID
 ENV CI_PROJECT_ID=$CI_PROJECT_ID
