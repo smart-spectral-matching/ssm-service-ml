@@ -18,7 +18,7 @@ build-ssm-backend-ssm-ml:
     - docker push $CI_REGISTRY_IMAGE/$CI_COMMIT_REF_NAME-db:$CI_COMMIT_SHORT_SHA
     - docker push $CI_REGISTRY_IMAGE/$CI_COMMIT_REF_NAME-db:latest
     - cd ..
-    - docker run -e POSTGRES_DB=ssm -e POSTGRES_PASSWORD=password -p 5432:5432 --ip 172.17.0.2 --name ssmdb $CI_REGISTRY_IMAGE/$CI_COMMIT_REF_NAME-db:$CI_COMMIT_SHORT_SHA
+    - docker run -e POSTGRES_DB=ssm -e POSTGRES_PASSWORD=password -p 5432:5432 --ip 172.17.0.2 --name ssmdb $CI_REGISTRY_IMAGE/$CI_COMMIT_REF_NAME-db:$CI_COMMIT_SHORT_SHA &
     - docker build --build-arg CI_PROJECT_ID=$CI_PROJECT_ID --build-arg TWINE_PASSWORD=$CI_REGISTRY_PASSWORD --build-arg TWINE_USERNAME=$CI_REGISTRY_PASSWORD -t ssm-package-build .
     - docker stop ssmdb
     - cd ./jupyterhub
