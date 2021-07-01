@@ -58,6 +58,6 @@ setup(
     install_requires=install_requires,
     tests_require=['nose'],
     test_suite='nose.collector',
-    version='0.0.8',
+    version='0.0.9',
     zip_safe=False
 )
