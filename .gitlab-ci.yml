@@ -22,7 +22,7 @@ build-ssm-backend-ssm-ml:
     - docker build --build-arg CI_PROJECT_ID=$CI_PROJECT_ID --build-arg TWINE_PASSWORD=$CI_DEPLOY_PASSWORD --build-arg TWINE_USERNAME=$CI_DEPLOY_USER -t ssm-package-build .
     - docker stop ssmdb
     - cd ./jupyterhub
-    - docker build -t $CI_REGISTRY_IMAGE/$CI_COMMIT_REF_NAME:$CI_COMMIT_SHORT_SHA --build-arg ML_PROJECT_ID=$CI_PROJECT_ID --build-arg GITLAB_PASSWORD=$CI_REGISTRY_PASSWORD --build-arg GITLAB_USERNAME=$CI_REGISTRY_USER .
+    - docker build -t $CI_REGISTRY_IMAGE/$CI_COMMIT_REF_NAME:$CI_COMMIT_SHORT_SHA --build-arg ML_PROJECT_ID=$CI_PROJECT_ID --build-arg GITLAB_PASSWORD=$CI_DEPLOY_PASSWORD --build-arg GITLAB_USERNAME=$CI_DEPLOY_USER .
     - docker tag $CI_REGISTRY_IMAGE/$CI_COMMIT_REF_NAME:$CI_COMMIT_SHORT_SHA $CI_REGISTRY_IMAGE/$CI_COMMIT_REF_NAME:latest
     - docker push $CI_REGISTRY_IMAGE/$CI_COMMIT_REF_NAME:$CI_COMMIT_SHORT_SHA
     - docker push $CI_REGISTRY_IMAGE/$CI_COMMIT_REF_NAME:latest
