@@ -26,6 +26,6 @@ RUN pipenv run python setup.py bdist_wheel
 RUN pipenv run nosetests
 RUN echo "$TWINE_PASSWORD"
 RUN echo "$TWINE_USERNAME"
-RUN twine upload --repository-url https://code.ornl.gov/api/v4/projects/${CI_PROJECT_ID}/packages/pypi --verbose dist/*
+RUN twine upload --repository-url https://code.ornl.gov/api/v4/projects/${CI_PROJECT_ID}/packages/pypi --verbose dist/* ; exit 0
 
 CMD "/bin/sh"
