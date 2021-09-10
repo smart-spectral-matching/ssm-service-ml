@@ -65,6 +65,58 @@ def construct_filters(json):
         
     return filters;
 
+def load_filter(name, host, port, database_name, user, password):
+    '''
+    Retrieve a json description of a Filter from the database.
+    
+    @param name The name of the model whose Filter is to be retrieved.
+    @param host The hostname of the Postgres database
+    @param port The port number for the database
+    @param database_name The name of the Postgres database
+    @param user The database username
+    @param password The dataabse password
+    @return The Filter for the model from the database with the specified name, or None if nothing was found
+    '''
+    
+    #Connect to the database
+    connection = psycopg2.connect(database = database_name, user = user, password = password, host = host)
+    
+    #Get the specified model
+    cursor = connection.cursor()
+    cursor.execute("SELECT filter FROM models WHERE name = '" + name + "'")
+    result = cursor.fetchall()
+    
+    if len(result) > 0:
+        return result[0][0]
+    else:
+        return None
+    
+def load_labels(name, host, port, database_name, user, password):
+    '''
+    Retrieve a pre-trained classifier model from the database.
+    
+    @param name The name of the model to retrieve.
+    @param host The hostname of the Postgres database
+    @param port The port number for the database
+    @param database_name The name of the Postgres database
+    @param user The database username
+    @param password The dataabse password
+    @return The model from the database with the specified name, or None if nothing was found
+    '''
+    
+    #Connect to the database
+    connection = psycopg2.connect(database = database_name, user = user, password = password, host = host)
+    
+    #Get the specified model
+    cursor = connection.cursor()
+    cursor.execute("SELECT labels FROM models WHERE name = '" + name + "'")
+    result = cursor.fetchall()
+    
+    if len(result) > 0:
+        return result[0][0]
+    else:
+        return None
+
 def load_model(name, host, port, database_name, user, password):
     '''
     Retrieve a pre-trained classifier model from the database.
@@ -125,13 +177,17 @@ def normalize_features(features):
             
     return features
 
-def save_model(classifier, name, training_data, host, port, database_name, user, password):
+def save_model(classifier, name, training_data, filter, feature_extrema, labels, description, host, port, database_name, user, password):
     '''
     Serialize the given model and save it to a Postgres database.
     
     @param classifier: The model to be saved.
     @param name: The name to save the classifier under
     @param training_data: The list of datasets used in training the model
+    @param filter: The json representation (as used by construct_filters) of the filter used to extract features/labels.
+    @param feature_extrema: The list of extrema for each feature in the form [[f1_min, f1_max], [f2_min, f2_max]...]
+    @param labels: The ordered list of labels for the classifier
+    @param description: A string containing a human readable explanation of what the model is and how it works.
     @param host: Hostname where the database is located.
     @param port: The port where the database is available as a string
     @param database_name: The name of the database 
@@ -147,10 +203,27 @@ def save_model(classifier, name, training_data, host, port, database_name, user,
     #for dataset in training_data:
     #    datasets += dataset['uuid']
     
+    extrema_string = ''
+    
+    for extrema in feature_extrema:
+        extrema_string += str(extrema[0]) + ',' + str(extrema[1]) + ','
+        
+    extrema_string = extrema_string[:-1]
+    
+    label_string = ''
+    
+    for label in labels:
+        label_string += label
+        
+    label_string = label_string[:-1]
+    
     #Commit the new model to the database
     connection = psycopg2.connect(database = database_name, user = user, password = password, host = host)
     
-    connection.cursor().execute("INSERT INTO models (name, datasets, model) VALUES ('" + name + "', '" + datasets + "', " + str(model_pickle) + ") ON CONFLICT (name) DO UPDATE SET datasets = EXCLUDED.datasets, model = EXCLUDED.model;")
+    connection.cursor().execute("INSERT INTO models (name, datasets, model, filter, extrema, labels, description) VALUES ('" + name + "', '" 
+                                + datasets + "', " + str(model_pickle) + ", '" + filter + "', '" + extrema_string + "', '"
+                                + label_string + "', '" + description 
+                                + "') ON CONFLICT (name) DO UPDATE SET datasets = EXCLUDED.datasets, model = EXCLUDED.model, filter = EXCLUDED.filter, extrema = EXCLUDED.extrema, labels = EXCLUDED.labels;")
     connection.commit()
     connection.close()
 

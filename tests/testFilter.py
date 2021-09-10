@@ -2,6 +2,7 @@ import unittest
 
 from ssm_ml import Filter
 
+
 class TestFilter(unittest.TestCase):
     '''
     Test class for the Filter class 
@@ -25,16 +26,17 @@ class TestFilter(unittest.TestCase):
                     },
                     
                     "spectra" : [
-                            {
+                        {
+                            "x-axis" : {
                                 "axis" : "x-axis",
                                 "data" : [10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
                                 },
-                            {
+                            "y-axis" : {
                                 "axis" : "y-axis",
                                 "data" : [0, 1, 2, 4, 8, 16, 8, 4, 2, 1]
                                 }
+                    }
                     ]
-                    
                 },
                 {    
                    "components" : [
@@ -46,20 +48,22 @@ class TestFilter(unittest.TestCase):
                     },
                     
                     "spectra" : [
-                            {
+                        {
+                            "x-axis" : {
                                 "axis" : "x-axis",
                                 "data" : [10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
                                 },
-                            {
+                            "y-axis" : {
                                 "axis" : "y-axis",
                                 "data" : [0, 1, 2, 4, 15, 7, 8, 4, 2, 1]
                                 }
-                    ]
+                    }
+                        ]
                 },
                 {
                         "components" : [
                             {"name" : "bar"}
-                        ],   
+                        ],
                     "properties" : {
                             "phase" : "liquid",
                             "name" : "lithium"
@@ -67,14 +71,16 @@ class TestFilter(unittest.TestCase):
                     
                     "spectra" : [
                             {
-                                "axis" : "x-axis",
-                                "data" : [10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+                                "x-axis" : {
+                                    "axis" : "x-axis",
+                                    "data" : [10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
                                 },
-                            {
-                                "axis" : "y-axis",
-                                "data" : [0, 1, 2, 4, 8, 10, 12, 14, 16, 18]
+                                "y-axis" : {
+                                    "axis" : "y-axis",
+                                    "data" : [0, 1, 2, 4, 8, 10, 12, 14, 16, 18]
                                 }
-                    ]
+                            }
+                            ]
                 }
             ]
         
@@ -86,16 +92,17 @@ class TestFilter(unittest.TestCase):
                     },
                     
                     "spectra" : [
-                            {
+                        {
+                            "x-axis" : {
                                 "axis" : "x-axis",
                                 "data" : [10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
                                 },
-                            {
+                            "y-axis" : {
                                 "axis" : "y-axis",
                                 "data" : [21, 22, 24, 22, 21, 0, 1, 2, 1, 0]
                                 }
+                    }
                     ]
-                    
                 },
                 {    
                     "properties" : {
@@ -104,15 +111,17 @@ class TestFilter(unittest.TestCase):
                     },
                     
                     "spectra" : [
-                            {
+                        {
+                            "x-axis" : {
                                 "axis" : "x-axis",
                                 "data" : [10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
                                 },
-                            {
+                            "y-axis" : {
                                 "axis" : "y-axis",
                                 "data" : [21, 22, 24, 22, 21, 0, 3, 2, 1, 0 ]
                                 }
-                    ]
+                    }
+                        ]
                 },
                 {
                     
@@ -122,15 +131,17 @@ class TestFilter(unittest.TestCase):
                     },
                     
                     "spectra" : [
-                            {
+                        {
+                            "x-axis" : {
                                 "axis" : "x-axis",
                                 "data" : [10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
                                 },
-                            {
+                            "y-axis" : {
                                 "axis" : "y-axis",
                                 "data" : [21, 22, 24, 22, 21, 0, 4, 1, 2, 5]
                                 }
-                    ]
+                    }
+                        ]
                 }
             ]
     
@@ -149,37 +160,40 @@ class TestFilter(unittest.TestCase):
         
         features = filter.getFeatures(self.defaultData)
         
-        #Test that peak finding works
+        for t in self.twoRangeData:
+            print(t['spectra'][0])
+        
+        # Test that peak finding works
         self.assertEquals(16, features[0][0])
         self.assertEquals(15, features[1][0])
         self.assertEquals(18, features[2][0])
-        #self.assertListEqual([16, 15, 18], features[0])
+        # self.assertListEqual([16, 15, 18], features[0])
         
-        #Test that finding the peak location works
+        # Test that finding the peak location works
         self.assertEquals(15, features[0][1])
         self.assertEquals(14, features[1][1])
         self.assertEquals(19, features[2][1])
-        #self.assertListEqual([15, 14, 19, features[1]])
+        # self.assertListEqual([15, 14, 19, features[1]])
         
         features = filter.getFeatures(self.twoRangeData)
         
-        #Test that peak finding in a range works
+        # Test that peak finding in a range works
         self.assertEquals(17, features[0][2])
         self.assertEquals(16, features[1][2])
         self.assertEquals(19, features[2][2])
-        #self.assertListEqual([17, 16, 19], features[2])
+        # self.assertListEqual([17, 16, 19], features[2])
         
-        #Test that peak finding in a partially overlapping range works
+        # Test that peak finding in a partially overlapping range works
         self.assertEquals(17, features[0][3])
         self.assertEquals(16, features[1][3])
         self.assertEquals(19, features[2][3])
-        #self.assertListEqual([17, 16, 19], features[3])
+        # self.assertListEqual([17, 16, 19], features[3])
         
-        #Test that finding the ratio of the peak over average values works
+        # Test that finding the ratio of the peak over average values works
         self.assertEquals(2.0 / 0.8, features[0][4])
         self.assertEquals(3.0 / 1.2, features[1][4])
         self.assertEquals(5.0 / 2.4, features[2][4])
-        #self.assertListEqual([2.0 / 5.0, 6.0 / 1.2, 5.0 / 2.4], features[4])
+        # self.assertListEqual([2.0 / 5.0, 6.0 / 1.2, 5.0 / 2.4], features[4])
         
     def test_label(self):
         '''
@@ -188,12 +202,12 @@ class TestFilter(unittest.TestCase):
         
         filter = Filter.Filter()
         
-        #Test finding a property in the data
+        # Test finding a property in the data
         filter.labelPath = ["properties", "phase"]
         labels = filter.getLabels(self.defaultData)
         self.assertListEqual(["solid", "solid", "liquid"], labels)
         
-        #Test finding presense/absense of an item in a list
+        # Test finding presense/absense of an item in a list
         filter.labelPath = ["components", "SSM:PRESENT:name:foo"]
         labels = filter.getLabels(self.defaultData)
         self.assertListEqual(["foo_present", "foo_present", "foo_absent"], labels)
