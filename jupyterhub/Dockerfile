@@ -25,6 +25,7 @@ COPY ./docker-entrypoint.sh  /
 RUN apt-get update 
 RUN apt-get install -y build-essential libpq-dev python3-dev 
 RUN pip install psycopg2
+RUN pip install traitlets==5.1.1
 RUN pip install ssm-ml --extra-index-url https://__token__:$GITLAB_PASSWORD@code.ornl.gov/api/v4/projects/$ML_PROJECT_ID/packages/pypi/simple
 
 WORKDIR /srv/jupyterhub
