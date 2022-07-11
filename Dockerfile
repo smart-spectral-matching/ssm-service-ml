@@ -1,29 +1,20 @@
 FROM code.ornl.gov:4567/rse/datastreams/ssm/backend/ssm-ml/python:3.6.13-slim-buster
 
-ARG CI_PROJECT_ID
-ENV CI_PROJECT_ID=$CI_PROJECT_ID
-ARG TWINE_PASSWORD
-ENV TWINE_PASSWORD=$TWINE_PASSWORD
-ARG TWINE_USERNAME
-ENV TWINE_USERNAME=$TWINE_USERNAME
-
 RUN pip3 install --upgrade pip
 RUN pip install --upgrade pip setuptools wheel
 RUN apt-get update
 RUN apt-get -y install build-essential libpq-dev twine
 
-RUN pip install nose pipenv
-RUN pipenv install
+RUN pip install nose pipenv psycopg2 sklearn coverage
 
-ADD . ./
+WORKDIR /app
 
-RUN pipenv lock -r > requirements.txt
-RUN pipenv lock -r --dev > requirements-dev.txt
+ADD Pipfile /app
+RUN pipenv lock -r > requirements.txt \
+    && pipenv lock -r --dev > requirements-dev.txt
+
+ADD . /app
+
 RUN pipenv install
-RUN pip install matplotlib numpy psycopg2 sklearn
-RUN pipenv run python setup.py sdist
-RUN pipenv run python setup.py bdist_wheel
-RUN pipenv run nosetests
-RUN twine upload --repository-url https://code.ornl.gov/api/v4/projects/${CI_PROJECT_ID}/packages/pypi --verbose dist/* ; exit 0
 
 CMD "/bin/sh"
