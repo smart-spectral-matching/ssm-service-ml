@@ -413,10 +413,23 @@ def save_model(classifier, name, training_data, filter_json, feature_extrema, la
                 
     # Calculate metrics
     f1 = (2.0 * tp) / (2.0 * tp + fp + fn)
-    recall = (1.0 * tp) / (tp + fn)
-    false_discovery = (1.0 * fp) / (fp + tp)
-    selectivity = (1.0 * tn) / (tn + fp)
-    false_omission = (1.0 * fn) / (fn + tn)
+    
+    if tp + fn > 0:
+        recall = (1.0 * tp) / (tp + fn)
+    else:
+        recall = 0
+    if fp + tp > 0:
+        false_discovery = (1.0 * fp) / (fp + tp)
+    else:
+        false_discovery = (1.0 * fp) / (fp + tp)
+    if tn + fp > 0:
+        selectivity = (1.0 * tn) / (tn + fp)
+    else:
+        selectivity = 0
+    if fn + tn > 0:
+        false_omission = (1.0 * fn) / (fn + tn)
+    else:
+        false_omission = 0
     
     #Pickle the classifier
     model_pickle = psycopg2.Binary(pickle.dumps(classifier))
