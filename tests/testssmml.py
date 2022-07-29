@@ -1,5 +1,6 @@
 import unittest
 
+from ssm_ml import Filter
 from ssm_ml import ssmml
 
 class TestSsmml(unittest.TestCase):
@@ -174,20 +175,25 @@ class TestSsmml(unittest.TestCase):
         '''
         Test saving and loading a model with the database
         '''
-        
+         
         #Create a simple classifier
         features = [[0,0],[1,1]]
         labels = ['off', 'on']
         classifier = ssmml.train(labels, features, "SVC")
-        filter = '{ "foo" : 4, "bar" : "none" }'
-        
-        ssmml.save_model(classifier, "test", ['0', '1'], filter, [[0,1],[0,1]], labels, "sample model for testing", "172.17.0.2", "5432", "ssm", "postgres", "postgres")
+        filter_json = '{ "foo" : 4, "bar" : "none" }'
+        filter = Filter.Filter()
+        filter.feature_mins = [0, 0]
+        filter.feature_maxs = [1, 1]
+        filter.featurePaths=[[],[]]
+         
+        ssmml.save_model(classifier, "test", ['0', '1'], filter_json, [[0,1],[0,1]], labels, "sample model for testing", "172.17.0.2", "5432", "ssm", "postgres", "postgres", filter, [[0,0], [1,1]], ["off", "on"])
         db_classifier = ssmml.load_model('test', "172.17.0.2", "5432", "ssm", "postgres", "postgres")
-        
+         
+         
         self.assertTrue(-0.9 > db_classifier.decision_function([[0.1,0.1]]))
-        
+         
         db_filter = ssmml.load_filter('test', "172.17.0.2", "5432", "ssm", "postgres", "postgres")
-        self.assertEqual(filter, db_filter)
+        self.assertEqual(filter_json, db_filter)
         
     def test_normalize_features(self):
         '''

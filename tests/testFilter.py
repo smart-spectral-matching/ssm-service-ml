@@ -30,12 +30,14 @@ class TestFilter(unittest.TestCase):
                             "x-axis" : {
                                 "axis" : "x-axis",
                                 "data" : [10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
-                                },
+                                }
+                            },
+                            {
                             "y-axis" : {
                                 "axis" : "y-axis",
                                 "data" : [0, 1, 2, 4, 8, 16, 8, 4, 2, 1]
                                 }
-                    }
+                            }
                     ]
                 },
                 {    
@@ -52,12 +54,14 @@ class TestFilter(unittest.TestCase):
                             "x-axis" : {
                                 "axis" : "x-axis",
                                 "data" : [10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
-                                },
+                                }
+                            },
+                            {
                             "y-axis" : {
                                 "axis" : "y-axis",
                                 "data" : [0, 1, 2, 4, 15, 7, 8, 4, 2, 1]
                                 }
-                    }
+                            }
                         ]
                 },
                 {
@@ -74,7 +78,9 @@ class TestFilter(unittest.TestCase):
                                 "x-axis" : {
                                     "axis" : "x-axis",
                                     "data" : [10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
-                                },
+                                }
+                            },
+                            {
                                 "y-axis" : {
                                     "axis" : "y-axis",
                                     "data" : [0, 1, 2, 4, 8, 10, 12, 14, 16, 18]
@@ -96,12 +102,14 @@ class TestFilter(unittest.TestCase):
                             "x-axis" : {
                                 "axis" : "x-axis",
                                 "data" : [10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
-                                },
+                                }
+                        },
+                        {
                             "y-axis" : {
                                 "axis" : "y-axis",
                                 "data" : [21, 22, 24, 22, 21, 0, 1, 2, 1, 0]
                                 }
-                    }
+                        }
                     ]
                 },
                 {    
@@ -115,12 +123,14 @@ class TestFilter(unittest.TestCase):
                             "x-axis" : {
                                 "axis" : "x-axis",
                                 "data" : [10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
-                                },
+                                }
+                        },
+                        {
                             "y-axis" : {
                                 "axis" : "y-axis",
                                 "data" : [21, 22, 24, 22, 21, 0, 3, 2, 1, 0 ]
                                 }
-                    }
+                        }       
                         ]
                 },
                 {
@@ -135,12 +145,14 @@ class TestFilter(unittest.TestCase):
                             "x-axis" : {
                                 "axis" : "x-axis",
                                 "data" : [10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
-                                },
+                                }
+                        },
+                        {
                             "y-axis" : {
                                 "axis" : "y-axis",
                                 "data" : [21, 22, 24, 22, 21, 0, 4, 1, 2, 5]
                                 }
-                    }
+                        }
                         ]
                 }
             ]

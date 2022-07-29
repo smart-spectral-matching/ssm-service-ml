@@ -6,6 +6,7 @@ verify_ssl = true
 [dev-packages]
 
 [packages]
+matplotlib = "*"
 numpy = "*"
 psycopg2 = "*"
 sklearn = "*"

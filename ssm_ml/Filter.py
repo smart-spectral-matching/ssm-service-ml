@@ -1,3 +1,5 @@
+from scipy import signal
+
 class Filter:
     '''
     A filter that finds the features and labels in datasets.
@@ -8,8 +10,18 @@ class Filter:
         '''
         The default constructor
         '''
+        
+        # Paths for each label applied
         self.labelPath = []
+        
+        # Paths for each feature 
         self.featurePaths = []
+        
+        # The true (non-normalized) minimum values for each feature
+        self.feature_mins = []
+        
+        # The true (non-normalized) maximum values for each feature
+        self.feature_maxs = []
         
     def getFeatures(self, dicts):
         '''
@@ -34,6 +46,23 @@ class Filter:
                 new_feature.append(feature[i])
             final_features.append(new_feature)
             
+        #Reset the extrema
+        self.feature_mins = []
+        self.feature_maxs = []
+        
+        #Initialize the extrema
+        for f in final_features[0]:
+            self.feature_mins.append(f)
+            self.feature_maxs.append(f)
+            
+        #Find the extrema for all features
+        for feature in final_features:
+            for i in range(len(feature)):
+                if feature[i] < self.feature_mins[i]:
+                    self.feature_mins[i] = feature[i]
+                elif feature[i] > self.feature_maxs[i]:
+                    self.feature_maxs[i] = feature[i]
+            
         return final_features
         
     def getLabels(self, dicts):
@@ -53,6 +82,9 @@ class Filter:
             in the dictionary or one of:
             SSM:REG:foo The value of the fist key in the current list that matches regular expression "foo".
             SSM:XY:foo:PEAK The largest y value in the dictionary specified by the list item that has "foo" = "y-axis".
+            SSM:XY:foo:PEAK-DISTANCE:start:end:distance:tolerance:number:width 0 or 1. 1 if, within the range start to end, there 
+                are Number peaks with Distance +/ Tolerance space between them in the X dimension and at least Width wide. 0 
+                otherwise. 
             SSM:XY:foo:PEAK-LOC The x value x[i] such that y[i] is maximal in the two list items where "foo" = "x-axis" 
                 and "foo" = "y-axis" respectively.
             SSM:XY:foo:PEAK-LOC-RANGE:start:end The x value x[i] such that y[i] is maximal where start <= x[i] <= end in the
@@ -68,8 +100,10 @@ class Filter:
         
         next_values = []
         
+        print(path)
+        
         # SSM: is the flag for special actions in the path
-        if path[0].startswith("SSM:"):
+        if isinstance(path[0], str) and path[0].startswith("SSM:"):
             
             # SSM:REG: defines selecting by a regular expression 
             if path[0].startswith("SSM:REG:"):
@@ -105,30 +139,27 @@ class Filter:
                 # For each dictionary, find the sub-dictionaries in the list for the x and y axes.
                 for curr_dict in dicts:
                     
-                    x_next.append(curr_dict[0]['x-axis'])
-                    y_next.append(curr_dict[0]['y-axis'])
-                    
-#                     for candidate in curr_dict:
-#                     
-#                         if not key in candidate:
-#                             continue
-#                     
-#                         x_found = False
-#                         y_found = False
-# 
-#                         if candidate[key] == 'x-axis':
-#                             x_next.append(candidate)
-#                             x_found = True
-#                         elif candidate[key] == 'y-axis':
-#                             y_next.append(candidate)
-#                             y_found = True
-#                             
-#                         if x_found and y_found:
-#                             break;
+                    for candidate in curr_dict:
+                     
+                        x_found = False
+                        y_found = False
+                        
+ 
+                        if "x-axis" in candidate.keys():
+                            x_next.append(candidate["x-axis"])
+                            x_found = True
+                        if "y-axis" in candidate.keys():
+                            y_next.append(candidate["y-axis"])
+                            y_found = True
+                             
+                        if x_found and y_found:
+                            break;
                         
                 # Continue the search down for the x and y data
                 x = self._getNextSegment(x_next, path[1:])
                 y = self._getNextSegment(y_next, path[1:])
+                
+                print("final x " + str(len(x)))
                     
                 # The PEAK operation finds the highest value in the data
                 if op == "PEAK":
@@ -147,6 +178,99 @@ class Filter:
                         peaks.append(peak)
                         
                     return peaks
+                
+                #The PEAK-DISTANCE operator checks whether there are a given number of peaks with a given spacing in a given
+                # region
+                elif op.startswith("PEAK-DISTANCE"):
+                    
+                    op_tokens = op.split("-")
+                    
+                    #Start and end of the range to search
+                    start = int(float(op_tokens[2]))
+                    end = int(float(op_tokens[3]))
+                    
+                    #Distance between peaks
+                    distance = int(float(op_tokens[4]))
+                    
+                    #Tolerance for how much peaks can vary from the distance
+                    tolerance = int(float(op_tokens[5]))
+                    
+                    #Number of peaks sought
+                    target_num = int(float(op_tokens[6]))
+                    
+                    #Upper and lower values for the range of acceptable next peak locations
+                    range_lower = distance - tolerance
+                    range_upper = distance + tolerance
+                    
+                    #List of 0/1 flags for whether peak conditions were met for each series
+                    flags = []
+                    
+                    for i, series in enumerate(y):
+                        
+                        #Get the corresponding x series
+                        x_axis = x[i]
+                        
+                        #Peak locations
+                        peaks, props = signal.find_peaks(series, width=int(float(op_tokens[7])))
+                        
+                        #Whether a peak was found
+                        found = False
+                        
+                        #Check each peak to see if it starts a series that matches the peak conditions
+                        for peak in peaks:
+                            
+                            #Ignore peaks outside the range
+                            if x_axis[peak] >= start and x_axis[peak] <= end:
+                                
+                                #Latest peak that matches the series
+                                curr_peak = peak
+                                
+                                #Number of matching peaks found
+                                num_peaks = 1
+                                
+                                #Check each subsequent peak
+                                for next_peak in peaks:
+                                    
+                                    if next_peak > curr_peak:
+                                        
+                                        #If we passed the end of the 
+                                        if x_axis[next_peak] > end:
+                                            break
+                                        
+                                        #Ignore peaks before the start of the range for the next peak
+                                        if x_axis[next_peak] >= x_axis[curr_peak] + range_lower:
+                                            
+                                            #If the peak is within the range, count it and update the current peak
+                                            if x_axis[next_peak] <= x_axis[curr_peak] + range_upper:
+                                                
+                                                num_peaks += 1
+                                                
+                                                if num_peaks == target_num:
+                                                    
+                                                    break
+                                                
+                                                curr_peak = next_peak
+                                                
+                                            #If the peaks have passed the acceptable range, stop searching
+                                            else:
+                                                
+                                                break 
+                                
+                                #If enough peaks were found after this one, record it and stop searching            
+                                if num_peaks == target_num:
+                                    found = True
+                                    break
+                                
+                        #Add a flag depending on whether the pattern was found or not
+                        if found:
+                            flags.append(1)
+                        else:
+                            flags.append(0)
+                                                
+                                
+                    return flags        
+                            
+                        
                 
                 # The PEAK-LOC finds the values of x such that y[i] is the maximum y and x = x[i]
                 elif op == "PEAK-LOC":
@@ -167,6 +291,8 @@ class Filter:
                     return peaks
                 
                 elif op.startswith("PEAK-LOC-RANGE"):
+                    
+                    print("PEAK LOC RANGE")
                     
                     range_tokens = op.split("-")
                     

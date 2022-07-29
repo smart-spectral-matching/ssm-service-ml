@@ -20,7 +20,7 @@ ADD . ./
 RUN pipenv lock -r > requirements.txt
 RUN pipenv lock -r --dev > requirements-dev.txt
 RUN pipenv install
-RUN pip install psycopg2 sklearn
+RUN pip install matplotlib numpy psycopg2 sklearn
 RUN pipenv run python setup.py sdist
 RUN pipenv run python setup.py bdist_wheel
 RUN pipenv run nosetests
