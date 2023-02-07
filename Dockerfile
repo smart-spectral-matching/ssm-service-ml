@@ -1,4 +1,4 @@
-FROM code.ornl.gov:4567/rse/datastreams/ssm/backend/ssm-ml/python:3.6.13-slim-buster
+FROM code.ornl.gov:4567/rse/images/python:3.8-slim
 
 RUN pip3 install --upgrade pip
 RUN pip install --upgrade pip setuptools wheel
