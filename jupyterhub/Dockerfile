@@ -1,4 +1,4 @@
-FROM code.ornl.gov:4567/rse/datastreams/ssm/backend/ssm-ml/jupyterhub/jupyterhub:1.3
+FROM code.ornl.gov:4567/rse/images/jupyterhub/jupyterhub:1.3
 
 ARG ML_PROJECT_ID
 ENV ML_PROJECT_ID=$ML_PROJECT_ID
