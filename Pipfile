@@ -10,6 +10,7 @@ matplotlib = "*"
 numpy = "*"
 psycopg2 = "*"
 sklearn = "*"
+scipy = "*"
 
 
 [requires]
