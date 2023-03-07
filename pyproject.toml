@@ -1,0 +1,26 @@
+[tool.poetry]
+name = "ssm-service-ml"
+version = "0.1.0"
+description = "SSM ML Package"
+authors = ["Robert Smith <smithrw@ornl.gov>"]
+license = "BSD 3-Clause License"
+readme = "README.md"
+packages = [{include = "ssm_ml"}]
+
+[tool.poetry.dependencies]
+python = ">=3.8,<3.12"
+matplotlib = "^3.6.3"
+numpy = "^1.24.2"
+psycopg2-binary = "^2.9.5"
+scipy = "^1.10.0"
+scikit-learn = "^1.2.1"
+
+
+[tool.poetry.group.dev.dependencies]
+coverage = "^7.1.0"
+pytest = "^7.2.1"
+pytest-cov = "^4.0.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

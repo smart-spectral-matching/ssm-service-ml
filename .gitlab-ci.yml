@@ -1,10 +1,10 @@
 variables:
   GIT_STRATEGY: clone
-  PYTHON_IMAGE: "code.ornl.gov:4567/rse/datastreams/ssm/clients/ssm-rest-python-client/python:3.6"
+  PYTHON_IMAGE: "code.ornl.gov:4567/rse/images/python:3.8-slim"
 
 stages:
   - build
-  - deploy
+  - package
 
 include:
     remote: "https://code.ornl.gov/rse-deployment/rse-sharables/-/raw/master/.gitlab-ci-before_script.yml"
@@ -22,7 +22,7 @@ build-ssm-backend-ssm-ml:
     - cd ..
     - docker run -e POSTGRES_DB=ssm -e POSTGRES_PASSWORD=password -p 5432:5432 --ip 172.17.0.2 --name ssmdb $CI_REGISTRY_IMAGE/$CI_COMMIT_REF_NAME-db:$CI_COMMIT_SHORT_SHA &
     - docker build -t ssm-ml .
-    - docker run ssm-ml pipenv run nosetests --with-coverage --cover-package ssm_ml
+    - docker run ssm-ml poetry run pytest --cov=. tests/
     - docker stop ssmdb
     - cd ./jupyterhub
     - docker build -t $CI_REGISTRY_IMAGE/$CI_COMMIT_REF_NAME:$CI_COMMIT_SHORT_SHA --build-arg ML_PROJECT_ID=$CI_PROJECT_ID --build-arg GITLAB_PASSWORD=$CI_DEPLOY_PASSWORD --build-arg GITLAB_USERNAME=$CI_DEPLOY_USER .
@@ -32,16 +32,13 @@ build-ssm-backend-ssm-ml:
   tags:
     - rse-multi-builder
 
-upload-package:
-    stage: deploy
+publish-package:
+    stage: package
     script:
-        - func_rse_docker_cleanup
-        - docker login --username=$CI_REGISTRY_USER --password=$CI_REGISTRY_PASSWORD $CI_REGISTRY
-        - docker pull ${PYTHON_IMAGE}
-        - docker run -v $(pwd):/app -w /app  ${PYTHON_IMAGE} bash -c "pip install pipenv && pipenv install --dev && pipenv run make dist && TWINE_PASSWORD=${CI_DEPLOY_PASSWORD} TWINE_USERNAME=${CI_DEPLOY_USER} pipenv run twine upload --verbose --repository-url https://code.ornl.gov/api/v4/projects/${CI_PROJECT_ID}/packages/pypi dist/*"
-        - sudo chown -R gitlab-runner .
-        - func_rse_docker_cleanup
+      - docker login --username=$CI_REGISTRY_USER --password=$CI_REGISTRY_PASSWORD $CI_REGISTRY
+      - docker run --rm $CI_REGISTRY_IMAGE/$CI_COMMIT_REF_NAME:$CI_COMMIT_SHORT_SHA bash .ci/publish-package.sh gitlab-ci-token $CI_JOB_TOKEN
     tags:
         - rse-multi-builder
     only:
-        - tags
+        - /^v\d+\.\d+\.\d+.*$/
+

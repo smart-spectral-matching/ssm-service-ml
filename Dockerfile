@@ -1,20 +1,32 @@
-FROM code.ornl.gov:4567/rse/datastreams/ssm/backend/ssm-ml/python:3.6.13-slim-buster
+ARG REPO=code.ornl.gov:4567/rse/images
+FROM ${REPO}/python:3.8-slim as production
 
-RUN pip3 install --upgrade pip
-RUN pip install --upgrade pip setuptools wheel
-RUN apt-get update
-RUN apt-get -y install build-essential libpq-dev twine
+ARG POETRY_HTTP_BASIC_PYPI_USERNAME
+ARG POETRY_HTTP_BASIC_PYPI_PASSWORD
 
-RUN pip install nose pipenv psycopg2 sklearn coverage
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=off \
+    PIP_DISABLE_PIP_VERSION_CHECK=on \
+    PIP_DEFAULT_TIMEOUT=100 \
+    POETRY_HOME="/opt/poetry" \
+    POETRY_VIRTUALENVS_IN_PROJECT=true \
+    POETRY_NO_INTERACTION=1 \
+    POETRY_VERSION=1.2.0
+ENV PATH="$POETRY_HOME/bin:$VENV_PATH/bin:$PATH"
 
-WORKDIR /app
+# Production
+RUN apt update \
+    && apt install -y curl make \
+    && rm -rf /var/lib/apt/lists/* \
+    && curl -sSL https://install.python-poetry.org | python3 - \
+    && poetry config virtualenvs.create false
 
-ADD Pipfile /app
-RUN pipenv lock -r > requirements.txt \
-    && pipenv lock -r --dev > requirements-dev.txt
+WORKDIR /code
+COPY . /code
 
-ADD . /app
+RUN poetry install --only main
 
-RUN pipenv install
-
-CMD "/bin/sh"
+# Development
+FROM production as development
+RUN poetry install
