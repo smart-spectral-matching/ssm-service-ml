@@ -4,10 +4,11 @@ version: '3.2'
 services:
 
   jupyterhub:
-    build: ./jupyterhub
+    build:
+      context: .
+      dockerfile: ./jupyterhub/Dockerfile
     ports:
       - 8914:8000
     environment:
       JPYTR_USER: ssmuser
-      JPYTR_PASS: temecula
-
+      JPYTR_PASS: changeme 
