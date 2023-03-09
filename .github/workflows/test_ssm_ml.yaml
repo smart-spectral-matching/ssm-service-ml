@@ -25,7 +25,7 @@ jobs:
       - name: Install poetry
         run: |
           curl -sSL https://install.python-poetry.org | python -
-          echo "::set-env name=PATH::$HOME/.local/bin:$PATH"
+          echo "PATH=$HOME/.local/bin:$PATH" >> $GITHUB_ENV
       - name: Configure poetry
         run: poetry config virtualenvs.in-project true
       - name: Set up cache
