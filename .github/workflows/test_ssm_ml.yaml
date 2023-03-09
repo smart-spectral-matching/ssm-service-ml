@@ -14,31 +14,53 @@ jobs:
       fail-fast: false
 
     steps:
-      - uses: actions/checkout@v3
-      - name: Set up Python
+      - 
+        name: Checkout
+        uses: actions/checkout@v3
+      - 
+        name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Get full python version
+      - 
+        name: Get full python version
         id: full-python-version
         run: echo ::set-output name=version::$(python -c "import sys; print('-'.join(str(v) for v in sys.version_info))")
-      - name: Install poetry
+      - 
+        name: Install poetry
         run: |
           curl -sSL https://install.python-poetry.org | python -
           echo "PATH=$HOME/.local/bin:$PATH" >> $GITHUB_ENV
-      - name: Configure poetry
+      - 
+        name: Configure poetry
         run: poetry config virtualenvs.in-project true
-      - name: Set up cache
+      - 
+        name: Set up cache
         uses: actions/cache@v3
         id: cache
         with:
           path: .venv
           key: venv-${{ runner.os }}-${{ steps.full-python-version.outputs.version }}-${{ hashFiles('**/poetry.lock') }}
-      - name: Ensure cache is healthy
+      - 
+        name: Ensure cache is healthy
         if: steps.cache.outputs.cache-hit == 'true'
         run: poetry run pip --version >/dev/null 2>&1 || rm -rf .venv
-      - name: Install Dependencies
+      - 
+        name: Install Dependencies
         run: poetry install
-      - name: Test
-        run: poetry run pytest ./tests 
-
+      - 
+        name: Build database container image
+        run: docker build -t ssm-service-ml-db .
+      - 
+        name: Integration Tests
+        run: |
+            docker run -d \
+                --env POSTGRES_DB=ssm \
+                --env POSTGRES_PASSWORD=password \
+                --publish 5432:5432 \
+                --ip 172.17.0.2 \
+                --name ssmdb \
+                ssm-service-ml-db
+            poetry run pytest ./tests
+            docker stop ssmdb
+            docker rm ssmdb
