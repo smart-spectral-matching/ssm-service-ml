@@ -50,7 +50,9 @@ jobs:
         run: poetry install
       - 
         name: Build database container image
-        run: docker build -t ssm-service-ml-db .
+        run: |
+            cd Database
+            docker build -t ssm-service-ml-db .
       - 
         name: Integration Tests
         run: |
