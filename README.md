@@ -1,4 +1,4 @@
-# SSM Machine Learning
+# SSM Machine Learning Service + Package
 
 This is the machine learning component for the Smart Spectral Matching (SSM) project.
 
