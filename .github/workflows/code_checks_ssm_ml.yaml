@@ -103,7 +103,8 @@ jobs:
         name: Build and push jupyterhub to local registry
         uses: docker/build-push-action@v4
         with:
-          context: jupyterhub
+          context: .
+          file: jupyterhub/Dockerfile 
           push: true 
           platforms: linux/amd64,linux/arm64
           tags: ghcr.io/smart-spectral-matching/ssm-service-ml-jupyterhub:${{ github.ref_name }}-${{github.sha}}
