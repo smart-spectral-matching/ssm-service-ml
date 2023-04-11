@@ -1,4 +1,4 @@
-# SSM Machine Learning
+# SSM Machine Learning Service + Package
 
 This is the machine learning component for the Smart Spectral Matching (SSM) project.
 
@@ -7,7 +7,6 @@ This is the machine learning component for the Smart Spectral Matching (SSM) pro
 To launch the JupyterHub service
 
 ```
-docker login code.ornl.gov:4567
 docker-compose up
 ```
 
@@ -23,6 +22,6 @@ for local development, `<hostname>` will be `localhost`.
 
 When prompted, enter the development credentials:
  - User: `ssmuser`
- - Password: `temecula`
+ - Password: `changeme`
 
 From there, click on / launch the `ssmdemo.ipynb` notebook!

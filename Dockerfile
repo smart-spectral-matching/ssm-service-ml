@@ -1,5 +1,4 @@
-ARG REPO=code.ornl.gov:4567/rse/images
-FROM ${REPO}/python:3.8-slim as production
+FROM python:3.8-slim as production
 
 ARG POETRY_HTTP_BASIC_PYPI_USERNAME
 ARG POETRY_HTTP_BASIC_PYPI_PASSWORD
