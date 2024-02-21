@@ -259,7 +259,7 @@ def save_model(classifier, name, training_data, filter_json, feature_extrema, la
     
     @param classifier: The model to be saved.
     @param name: The name to save the classifier under
-    @param training_data: The list of datasets used in training the model
+    @param training_data: The list of collections used in training the model
     @param filter: The json representation (as used by construct_filters) of the filter used to extract features/labels.
     @param feature_extrema: The list of extrema for each feature in the form [[f1_min, f1_max], [f2_min, f2_max]...]
     @param labels: The ordered list of labels for the classifier
@@ -434,10 +434,10 @@ def save_model(classifier, name, training_data, filter_json, feature_extrema, la
     #Pickle the classifier
     model_pickle = psycopg2.Binary(pickle.dumps(classifier))
     
-    #Get the list of dataset uuids
-    datasets = ''
-    #for dataset in training_data:
-    #    datasets += dataset['uuid']
+    #Get the list of collection uuids
+    collections = ''
+    #for collection in training_data:
+    #    collections += collection['uuid']
     
     extrema_string = ''
     
@@ -454,8 +454,8 @@ def save_model(classifier, name, training_data, filter_json, feature_extrema, la
     label_string = label_string[:-1]
 
     
-    connection.cursor().execute("INSERT INTO models (name, datasets, model, filter, extrema, labels, description, f1, recall, selectivity, false_discovery, false_omission, true_positive, true_negative, false_positive, false_negative) VALUES ('" + name + "', '" 
-                                + datasets + "', " + str(model_pickle) + ", '" + filter_json + "', '" + extrema_string + "', '"
+    connection.cursor().execute("INSERT INTO models (name, collections, model, filter, extrema, labels, description, f1, recall, selectivity, false_discovery, false_omission, true_positive, true_negative, false_positive, false_negative) VALUES ('" + name + "', '" 
+                                + collections + "', " + str(model_pickle) + ", '" + filter_json + "', '" + extrema_string + "', '"
                                 + label_string + "', '" + description 
                                 + "'," + str(f1) + ", " 
                                 +str(recall) + ", " + str(selectivity) + ", " + str(false_discovery) + ", " + str(false_omission) + ", " + str(tp) + ", "
