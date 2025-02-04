@@ -1,4 +1,6 @@
+import copy
 import io
+import math
 import pickle
 import psycopg2
 
@@ -69,6 +71,60 @@ def construct_filters(json):
         filters.append(filter)
         
     return filters;
+
+def interpolate_spectra(spectra1, spectra2):
+    '''
+    Create a copy of spectra2 such that the x values are the same as those for spectra1, using interpolation to estimate 
+    values.
+    
+    @param spectra1 A list of lists of spectra values to serve as the prototype.
+    @param spectra2 A list of lists of spectra values to cast into the same wavenumbers as spectra1.
+    @return A list of lists of spectra values, such that the first list (the x axis) is equal to the first list in spectra1
+        and the second list (the y axis) contains estimated values of spectra2 at those wave numbers.
+    '''
+    
+    new_spectra = [copy.deepcopy(spectra1[0]),[]]
+    
+    for i in range(len(spectra1[0])):
+        target_x = spectra1[0][i]
+        
+        # If spectra2 extends beyond the bounds of spectra1, use the endpoint value
+        if spectra2[0][0] > target_x: 
+            new_spectra[1].append(spectra2[1][0])
+        elif spectra2[0][-1] < target_x:
+            new_spectra[1].append(spectra2[1][-1])
+        else:
+            # Search for the target value in spectra2's x axis
+            for j in range(len(spectra2[0])):
+                candidate_x = spectra2[0][j]
+                
+                # If the exact value exists, use its y data
+                if target_x == candidate_x:
+                    new_spectra[1].append(spectra2[1][j])
+                    break
+                
+                # We skipped past the target value, so interpolate
+                elif target_x < candidate_x:
+                    
+                    # Get the x/y values to the left and right of the target x value
+                    left_x = spectra2[0][j - 1]
+                    left_y = spectra2[1][j - 1]
+                    right_x = spectra2[0][j]
+                    right_y = spectra2[1][j]
+                    
+                    # Horizontal and vertical distance between left/right points
+                    distance = right_x - left_x
+                    slope = right_y - left_y
+                    
+                    # Add the proportion of the y distance equal to the proportion of x distance from the end to the target
+                    # This is the intersection between a perpindicular line from target_x to the line between the left and
+                    # right points
+                    interpolated_y = left_y + (float(target_x - left_x) / distance * slope)
+            
+                    new_spectra[1].append(interpolated_y)
+                    break
+                    
+    return new_spectra
 
 def load_extrema(name, host, port, database_name, user, password):
     '''
@@ -173,6 +229,80 @@ def load_model(name, host, port, database_name, user, password):
         return pickle.loads(result[0][0])
     else:
         return None
+    
+def match_spectra(search_spectra, datasets):
+    '''
+    Find the spectra from the database that match the given spectra.
+    
+    @param search_spectra List of two lists of floats, being the x and y axes, respectively of the spectra to match.
+    @param datasets List of all datasets to match against, in SSM dictionary format.
+    '''
+    
+    max_pcc = 0
+    max_pcc_name = ""
+    max_sec = 0
+    max_sec_name = ""
+    max_sfec = 0
+    max_sfec_name = ""
+    max_uned = 0
+    max_uned_name = ""
+    max_all = 0
+    max_all_name = ""
+    
+    for ds in datasets:
+        candidate = [[], []]
+        candidate[0] = ds['scidata']['dataseries'][0]["x-axis"]['parameter']['numericValueArray'][0]['numberArray']
+        candidate[1] = ds['scidata']['dataseries'][1]["y-axis"]['parameter']['numericValueArray'][0]['numberArray']
+        s1, s2 = truncate_spectra(search_spectra, candidate)
+        i1, i2 = interpolate_spectra(s1, s2)
+    
+        s1[1] = i1
+        s2[1] = i2
+        
+        pcc = pearson_correlation_coefficient(s1, s2)
+        if pcc > max_pcc:
+            max_pcc = pcc
+            max_pcc_name = ds['title']
+    
+        sfec = squared_first_difference_euclidean_cosine(s1, s2)
+        if sfec > max_sfec:
+            max_sfec = sfec
+            max_sfec_name = ds['title']
+        
+        sec = squared_euclidean_cosine(s1, s2)
+        if sec > max_sec:
+            max_sec = sec
+            max_sec_name = ds['title']
+    
+        uned = unit_normalized_euclidean_distance(s1, s2)
+        if uned > max_uned:
+            max_uned = uned
+            max_uned_name = ds['title']
+    
+        allv = pcc + sfec + sec + (uned / 329696240.4570517)
+        if allv > max_all:
+            max_all = allv
+            max_all_name = ds['title']
+    
+    print("Pearson Correlation Coefficient:")
+    print(max_pcc)
+    print(max_pcc_name)
+    
+    print("Squared Euclidean Cosine:")
+    print(max_sec)
+    print(max_sec_name)
+    
+    print("Squared First Order Euclidean Cosine:")
+    print(max_sfec)
+    print(max_sfec_name)
+    
+    print("Unit Normalized Eculidean Distance:")
+    print(max_uned)
+    print(max_uned_name)
+    
+    print("Overall:")
+    print(max_all)
+    print(max_all_name)
 
 def normalize_features(features):
     '''
@@ -207,6 +337,39 @@ def normalize_features(features):
             feature[i] = (feature[i] - feature_mins[i]) / (feature_maxs[i] - feature_mins[i]) 
             
     return features
+
+def pearson_correlation_coefficient(spectra1, spectra2):
+    '''
+    Calculate Pearson's correlation coefficient between the two spectra of the same length.
+    
+    @param spectra1 A list of lists of float spectra data, with one list for x and another for y
+    @param spectra2 A list of lists of float spectra data, with one list for x and another for y
+    @return The Pearson Correlation Coefficient as a float
+    '''
+    
+    sum1 = sum(spectra1[1])
+    sum2 = sum(spectra2[1])
+    sum_square1 = sum([i ** 2 for i in spectra1[1]])
+    sum_square2 = sum([i ** 2 for i in spectra2[1]])
+    series_mult = []
+    
+    for i in range(len(spectra1[0])):
+        series_mult.append(spectra1[1][i] * spectra2[1][i])
+        
+    sum_mult = sum(series_mult)
+        
+    numerator = sum1 * sum2 / len(spectra1[0])
+    numerator = sum_mult - numerator
+    
+    denominator_term1 = sum1 ** 2 / len(spectra1[0])
+    denominator_term1 = sum_square1 - denominator_term1
+    denominator_term2 = sum1 ** 2 / len(spectra2[0])
+    denominator_term2 = sum_square2 - denominator_term2
+    denominator = denominator_term1 * denominator_term2
+    
+    denominator = math.sqrt(denominator)
+    
+    return numerator / denominator
 
 def predict(filters, data, model, host, port, database_name, user, password):
     '''
@@ -466,7 +629,61 @@ def save_model(classifier, name, training_data, filter_json, feature_extrema, la
     
     connection.close()
     
+def squared_euclidean_cosine(spectra1, spectra2):
+    '''
+    Calculate the squared Euclidean cosine between the two spectra.
+    
+    @param spectra1 A list of lists of float spectra data, with one list for x and another for y
+    @param spectra2 A list of lists of float spectra data, with one list for x and another for y
+    @return The squared Euclidean cosine as a float
+    '''
 
+    array1 = np.array(spectra1[1])
+    array2 = np.array(spectra2[1])
+    
+    numerator = np.sum(np.multiply(array1, array2)) ** 2
+    
+    square1 = np.square(array1)
+    square2 = np.square(array2)
+    
+    sum1 = np.sum(square1)
+    sum2 = np.sum(square2)
+    
+    denominator = sum1 * sum2
+
+    if denominator == 0:
+        return 0
+
+    return numerator / denominator
+
+def squared_first_difference_euclidean_cosine(spectra1, spectra2):
+    '''
+    Calculate the squared first-difference Euclidean cosine between the two spectra.
+    
+    @param spectra1 A list of lists of float spectra data, with one list for x and another for y
+    @param spectra2 A list of lists of float spectra data, with one list for x and another for y
+    @return The squared first-difference Euclidean cosine as a float
+    '''
+    
+    array1 = np.array(spectra1[1])
+    array1 = np.ediff1d(array1)
+    array2 = np.array(spectra2[1])
+    array2 = np.ediff1d(array2)
+    
+    numerator = np.sum(np.multiply(array1, array2)) ** 2
+    
+    square1 = np.square(array1)
+    square2 = np.square(array2)
+    
+    sum1 = np.sum(square1)
+    sum2 = np.sum(square2)
+    
+    denominator = sum1 * sum2
+
+    if denominator == 0:
+        return 0
+
+    return numerator / denominator
 
 def train(labels, features, type):
     '''
@@ -524,4 +741,96 @@ def train(labels, features, type):
     classifier.fit(features, labels)
     
     return classifier
+
+def truncate_spectra(spectra1, spectra2):
+    '''
+    Truncate the spectra such that the two are guaranteed to have the same range. That is, if s1 ranges from 0 to 100 and
+    s2 ranges from 5 to 150, the new spectra will range from 50 to 100.
     
+    @param spectra1 A list of lists for x and y values of one spectra to truncate
+    @param spectra2 A list of lists for x and y values of the other spectra to truncate
+    @return Two lists of lists whose x axes start at max(lowest x in s1, lowest x in s2) and end at min(highest x in s1, 
+        highest x in s2) and are otherwise identical to s1 and s2 respectively.
+    '''
+
+    # Copy the spectra
+    s1 = copy.deepcopy(spectra1)
+    s2 = copy.deepcopy(spectra2)
+
+    # Get the starting point of each
+    start1 = s1[0][0]
+    start2 = s2[0][0]
+    
+    # If they don't start at the same value, cut from the start
+    if start1 != start2:
+        
+        cut_index = 0
+        
+        # If s1 starts first, truncate it
+        if start1 < start2:
+            
+            # Find the cutoff where s1 reaches s2
+            while s1[0][cut_index] < start2:
+                cut_index += 1
+                
+            s1[0] = s1[0][cut_index:]
+            s1[1] = s1[1][cut_index:]
+            
+        else:
+            
+            # Find the cutoff where s2 reaches s1
+            while s2[0][cut_index] < start1:
+                cut_index += 1
+                
+            s2[0] = s2[0][cut_index:]
+            s2[1] = s2[1][cut_index:]
+            
+    # Get the ending point of each
+    end1 = s1[0][-1]
+    end2 = s2[0][-1]
+    
+    # If they don't end at the same value, cut from the end
+    if end1 != end2:
+        
+        # If s2 ends last, truncate it
+        if end1 < end2:
+            
+            cut_index = len(s2[0]) - 1
+            
+            # Find the cutoff where s2 reaches s1
+            while s2[0][cut_index] > end1:
+                cut_index -= 1
+                
+            s2[0] = s2[0][0:cut_index]
+            s2[1] = s2[1][0:cut_index]
+            
+        else:
+            
+            cut_index = len(s1[0]) - 1
+            
+            # Find the cutoff where s1 reaches s2
+            while s1[0][cut_index] > end1:
+                cut_index -= 1
+                
+            s1[0] = s1[0][0:cut_index]
+            s1[1] = s1[1][0:cut_index]
+            
+    return s1, s2
+            
+def unit_normalized_euclidean_distance(spectra1, spectra2):
+    '''
+    Calculate the unit normalized Eculidean distance between the two spectra.
+    
+    @param spectra1 A list of lists of float spectra data, with one list for x and another for y
+    @param spectra2 A list of lists of float spectra data, with one list for x and another for y
+    @return The unit normalized Eculidean distance as a float
+    '''
+    
+    array1 = np.array(spectra1[1])
+    array2 = np.array(spectra2[1])
+    
+    difference = np.subtract(array1, array2)
+    value = np.square(difference)
+    sum = np.sum(value)
+    
+    return math.sqrt(sum)
