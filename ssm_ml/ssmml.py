@@ -95,7 +95,7 @@ def interpolate_spectra(spectra1, spectra2):
             new_spectra[1].append(spectra2[1][-1])
         else:
             # Search for the target value in spectra2's x axis
-            for j in range(len(spectra2[0]) - 1):
+            for j in range(len(spectra2[0])):
                 candidate_x = spectra2[0][j]
                 
                 # If the exact value exists, use its y data
@@ -229,6 +229,80 @@ def load_model(name, host, port, database_name, user, password):
         return pickle.loads(result[0][0])
     else:
         return None
+    
+def match_spectra(search_spectra, datasets):
+    '''
+    Find the spectra from the database that match the given spectra.
+    
+    @param search_spectra List of two lists of floats, being the x and y axes, respectively of the spectra to match.
+    @param datasets List of all datasets to match against, in SSM dictionary format.
+    '''
+    
+    max_pcc = 0
+    max_pcc_name = ""
+    max_sec = 0
+    max_sec_name = ""
+    max_sfec = 0
+    max_sfec_name = ""
+    max_uned = 0
+    max_uned_name = ""
+    max_all = 0
+    max_all_name = ""
+    
+    for ds in datasets:
+        candidate = [[], []]
+        candidate[0] = ds['scidata']['dataseries'][0]["x-axis"]['parameter']['numericValueArray'][0]['numberArray']
+        candidate[1] = ds['scidata']['dataseries'][1]["y-axis"]['parameter']['numericValueArray'][0]['numberArray']
+        s1, s2 = truncate_spectra(search_spectra, candidate)
+        i1, i2 = interpolate_spectra(s1, s2)
+    
+        s1[1] = i1
+        s2[1] = i2
+        
+        pcc = pearson_correlation_coefficient(s1, s2)
+        if pcc > max_pcc:
+            max_pcc = pcc
+            max_pcc_name = ds['title']
+    
+        sfec = squared_first_difference_euclidean_cosine(s1, s2)
+        if sfec > max_sfec:
+            max_sfec = sfec
+            max_sfec_name = ds['title']
+        
+        sec = squared_euclidean_cosine(s1, s2)
+        if sec > max_sec:
+            max_sec = sec
+            max_sec_name = ds['title']
+    
+        uned = unit_normalized_euclidean_distance(s1, s2)
+        if uned > max_uned:
+            max_uned = uned
+            max_uned_name = ds['title']
+    
+        allv = pcc + sfec + sec + (uned / 329696240.4570517)
+        if allv > max_all:
+            max_all = allv
+            max_all_name = ds['title']
+    
+    print("Pearson Correlation Coefficient:")
+    print(max_pcc)
+    print(max_pcc_name)
+    
+    print("Squared Euclidean Cosine:")
+    print(max_sec)
+    print(max_sec_name)
+    
+    print("Squared First Order Euclidean Cosine:")
+    print(max_sfec)
+    print(max_sfec_name)
+    
+    print("Unit Normalized Eculidean Distance:")
+    print(max_uned)
+    print(max_uned_name)
+    
+    print("Overall:")
+    print(max_all)
+    print(max_all_name)
 
 def normalize_features(features):
     '''
@@ -742,8 +816,8 @@ def truncate_spectra(spectra1, spectra2):
             s1[1] = s1[1][0:cut_index]
             
     return s1, s2
-            
-def unit_normalized_euclidean_distance(spectra1, specra2):
+
+def unit_normalized_euclidean_distance(spectra1, spectra2):
     '''
     Calculate the unit normalized Eculidean distance between the two spectra.
     
