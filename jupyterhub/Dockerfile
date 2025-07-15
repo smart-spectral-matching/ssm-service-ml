@@ -8,7 +8,7 @@ ENV JPYTR_USER='ssmuser'
 ENV JPYTR_PASS='passw0rd'
 
 RUN set -x \
-  && pip install matplotlib notebook numpy scikit-learn  markupsafe==2.0.1 \
+  && pip install matplotlib notebook==6.5.7 numpy scikit-learn  markupsafe==2.0.1 \
   && mkdir -p /etc/jupyterhub \
   && cd       /etc/jupyterhub \
   && jupyterhub --generate-config -f ./jupyterhub_config.py \

@@ -384,14 +384,14 @@ def predict(filters, data, model, host, port, database_name, user, password):
     @param user: The username for the database
     @param password: The password for the database
     '''
-    
     # Get the features for the current data point
     for filter in filters:
         features = filter.getFeatures(data)
     
     # Get the extrema from the database and convert them into numbers
+
     extrema_string = load_extrema(model, host, port, database_name, user, password)
-    
+   
     extrema = []
     
     for number in extrema_string.split(","):
@@ -575,20 +575,27 @@ def save_model(classifier, name, training_data, filter_json, feature_extrema, la
                 tp += 1
                 
     # Calculate metrics
-    f1 = (2.0 * tp) / (2.0 * tp + fp + fn)
+
+    if 2.0 * tp + fp + fn > 0:
+        f1 = (2.0 * tp) / (2.0 * tp + fp + fn)
+    else:
+        f1 = 0
     
     if tp + fn > 0:
         recall = (1.0 * tp) / (tp + fn)
     else:
         recall = 0
+
     if fp + tp > 0:
         false_discovery = (1.0 * fp) / (fp + tp)
     else:
-        false_discovery = (1.0 * fp) / (fp + tp)
+        false_discovery = 0
+
     if tn + fp > 0:
         selectivity = (1.0 * tn) / (tn + fp)
     else:
         selectivity = 0
+
     if fn + tn > 0:
         false_omission = (1.0 * fn) / (fn + tn)
     else:
