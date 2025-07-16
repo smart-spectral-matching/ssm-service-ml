@@ -19,3 +19,4 @@ RUN pip install .
 # Development
 FROM production AS development
 RUN pip install .[dev]
+
