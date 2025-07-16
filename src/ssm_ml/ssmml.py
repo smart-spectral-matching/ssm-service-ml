@@ -83,7 +83,11 @@ def interpolate_spectra(spectra1, spectra2):
         and the second list (the y axis) contains estimated values of spectra2 at those wave numbers.
     '''
 
+    # The new spectra will have the same x axis as spectra1
     new_spectra = [copy.deepcopy(spectra1[0]),[]]
+
+    # Last checked index in spectra 2
+    j = 0
 
     for i in range(len(spectra1[0])):
         target_x = spectra1[0][i]
@@ -95,11 +99,7 @@ def interpolate_spectra(spectra1, spectra2):
             new_spectra[1].append(spectra2[1][-1])
         else:
             # Search for the target value in spectra2's x axis
-<<<<<<< HEAD:src/ssm_ml/ssmml.py
-            for j in range(len(spectra2[0])):
-=======
-            for j in range(len(spectra2[0]) - 1):
->>>>>>> bff654a (Added tests for spectra matching functions):ssm_ml/ssmml.py
+            while j < len(spectra2[0]):
                 candidate_x = spectra2[0][j]
 
                 # If the exact value exists, use its y data
@@ -127,6 +127,8 @@ def interpolate_spectra(spectra1, spectra2):
 
                     new_spectra[1].append(interpolated_y)
                     break
+
+                j = j + 1
 
     return new_spectra
 
@@ -388,12 +390,12 @@ def predict(filters, data, model, host, port, database_name, user, password):
     @param user: The username for the database
     @param password: The password for the database
     '''
+
     # Get the features for the current data point
     for filter in filters:
         features = filter.getFeatures(data)
 
     # Get the extrema from the database and convert them into numbers
-
     extrema_string = load_extrema(model, host, port, database_name, user, password)
 
     extrema = []
@@ -845,3 +847,4 @@ def unit_normalized_euclidean_distance(spectra1, spectra2):
     sum = np.sum(value)
 
     return math.sqrt(sum)
+
