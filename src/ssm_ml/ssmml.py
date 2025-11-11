@@ -372,6 +372,10 @@ def pearson_correlation_coefficient(spectra1, spectra2):
     denominator_term2 = sum1 ** 2 / len(spectra2[0])
     denominator_term2 = sum_square2 - denominator_term2
     denominator = denominator_term1 * denominator_term2
+    
+    # If the denominator is invalid, return the lowest possible score
+    if denominator <= 0:
+        return -1
 
     denominator = math.sqrt(denominator)
 

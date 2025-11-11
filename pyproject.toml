@@ -1,6 +1,6 @@
 [project]
 name = "ssm-ml"
-version = "0.1.0"
+version = "0.3.1"
 description = "SSM ML Package"
 authors = [
     { name = "Robert Smith", email = "smithrw@ornl.gov" },
